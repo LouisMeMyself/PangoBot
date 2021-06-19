@@ -19,7 +19,8 @@ ERROR_ON_PROFILE_PICTURE ="""How to use pangoBot for profile pictures:
 
 1. Choose a HEX color or a RGB color in these formats: `#00FFFF`, `00FFFF`, `0 255 255` or `0,255,255`. [(color picker)](https://htmlcolorcodes.com/color-picker/)
 
-2. Enter this command `!pangopic [color]` add a second one for the background (like : `!pangopic [color] [color]`)!
+2. Enter this command `!pangopic [color]` !
+   You can enter `!pangopic random` to create a random and unique pango (more than 1E80 possibility)!
 
 3. Save image + add as your Discord profile photo !"""
 

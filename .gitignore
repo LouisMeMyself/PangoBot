@@ -11,3 +11,4 @@ venv
 .key
 *.json
 *.png
+*test*

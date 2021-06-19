@@ -3,6 +3,7 @@
 # import typing
 # from datetime import datetime
 import discord
+import numpy as np
 from discord.ext import commands
 
 from pangoBot import PangoPic, Constants
