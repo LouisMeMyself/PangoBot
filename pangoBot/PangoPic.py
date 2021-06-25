@@ -11,8 +11,12 @@ class PangoPic:
         with open("utils/pango-logo.svg", "rb") as f:
             self.pangoSVG = f.read().decode("utf-8")
         index, self.colorToIndex = 0, {}
+        self.indexEyes = self.pangoSVG.find("0.00;fill:#FF0000;}")
+        self.indexEyesShadow = self.pangoSVG.find("0.00;fill:#000000;")
         while 1:
             index = self.pangoSVG.find("#", index + 1)
+            if index == self.indexEyes + 11 or index == self.indexEyesShadow + 11:
+                continue
             if index == -1:
                 break
             if not self.hex_regex.match(self.pangoSVG[index + 1: index + 7]):
@@ -23,7 +27,6 @@ class PangoPic:
             else:
                 self.colorToIndex[col].append(index + 1)
         self.pangoSVG = list(self.pangoSVG)
-
 
     def str2hex(self, new_color):
         if new_color.replace(" ", "").replace(",", "") == "":  # handles empty messages
@@ -49,27 +52,53 @@ class PangoPic:
 
     def do_profile_picture(self, msg):
         try:
-            color = msg.split(" ")
-            if len(color) == 3: #R G B
-                color = (",".join(color[:3]),)
-            elif len(color) == 1: #Hexa
-                color = color
+            colors = msg.split(" ")
+            if len(colors) == 6:  # R G B and R G B
+                colors = (",".join(colors[:3]), ",".join(colors[3:]))
+            elif len(colors) == 2:  # Hexa/Hexa or R,G,B/R,G,B or Hexa/R,G,B or R,G,B/Hexa
+                colors = (colors[0], colors[1])
+            elif len(colors) == 4:
+                if len(colors[0]) >= 6:  # Hexa/R G B
+                    colors = (colors[0], ",".join(colors[1:]))
+                elif len(colors[3]) >= 6:  # R G B/Hexa
+                    colors = (",".join(colors[:3]), colors[3])
+            elif len(colors) == 3:  # R G B
+                colors = (",".join(colors[:3]),)
+            elif len(colors) == 1:  # Hexa
+                colors = colors
             else:
                 raise ValueError
-            if "random" in color:
+            print(colors)
+            if "full_random" in colors[0] or "full random" in colors[0]:
                 for idc in self.colorToIndex.values():
                     for i in idc:
                         self.pangoSVG[i: i + 6] = '%02X%02X%02X' % tuple(np.random.randint(0, 255, 3))
+            elif "random" in colors[0]:
+                r, g, b = np.random.randint(0, 255, 3)
+                hsv = colorsys.rgb_to_hsv(r, g, b)
+                for idc in self.colorToIndex.values():
+                    for i in idc:
+                        rgb = colorsys.hsv_to_rgb(min(max(hsv[0] + np.random.uniform(-0.2, 0.2), 0), 1), hsv[1], hsv[2])
+                        self.pangoSVG[i: i + 6] = '%02X%02X%02X' % (int(rgb[0]), int(rgb[1]), int(rgb[2]))
             else:
-                rgb_new_color = self.hex_to_rgb(self.str2hex(color[0]))
+                rgb_new_color = self.hex_to_rgb(self.str2hex(colors[0]))
                 hsv_new_color = colorsys.rgb_to_hsv(rgb_new_color[0], rgb_new_color[1], rgb_new_color[2])
 
                 for color, idc in self.colorToIndex.items():
                     color = self.hex_to_rgb(color)
                     hsv = colorsys.rgb_to_hsv(color[0], color[1], color[2])
-                    rgb = colorsys.hsv_to_rgb(hsv_new_color[0], hsv_new_color[1] * hsv[1], hsv_new_color[2] * hsv[2] / 255)
+                    rgb = colorsys.hsv_to_rgb(hsv_new_color[0], hsv_new_color[1] * hsv[1],
+                                              hsv_new_color[2] * hsv[2] / 255)
                     for i in idc:
                         self.pangoSVG[i: i + 6] = '%02X%02X%02X' % (int(rgb[0]), int(rgb[1]), int(rgb[2]))
+            if len(colors) == 2:
+                self.pangoSVG[self.indexEyes: self.indexEyes + 17] = "1.00;fill:#{}".format(self.str2hex(colors[1]))
+                self.pangoSVG[self.indexEyesShadow: self.indexEyesShadow + 4] = "0.25".format(self.str2hex(colors[1]))
+            else:
+                self.pangoSVG[self.indexEyes: self.indexEyes + 17] = "0.00;fill:#FF0000"
+                self.pangoSVG[self.indexEyesShadow: self.indexEyesShadow + 4] = "0.00"
+            with open("test.txt", "w") as f:
+                print("".join(self.pangoSVG), file=f)
             svg2png("".join(self.pangoSVG), write_to="utils/pango-logo.png")
             return "Here is your personalized profile picture!", discord.File("utils/pango-logo.png")
         except:
