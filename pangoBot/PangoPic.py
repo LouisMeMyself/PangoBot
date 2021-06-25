@@ -68,7 +68,6 @@ class PangoPic:
                 colors = colors
             else:
                 raise ValueError
-            print(colors)
             if "full_random" in colors[0] or "full random" in colors[0]:
                 for idc in self.colorToIndex.values():
                     for i in idc:
@@ -97,8 +96,6 @@ class PangoPic:
             else:
                 self.pangoSVG[self.indexEyes: self.indexEyes + 17] = "0.00;fill:#FF0000"
                 self.pangoSVG[self.indexEyesShadow: self.indexEyesShadow + 4] = "0.00"
-            with open("test.txt", "w") as f:
-                print("".join(self.pangoSVG), file=f)
             svg2png("".join(self.pangoSVG), write_to="utils/pango-logo.png")
             return "Here is your personalized profile picture!", discord.File("utils/pango-logo.png")
         except:
